@@ -23,7 +23,7 @@ const roleLabels = {
 
 export default function TeamMemberCard({ member, index, size = 'normal' }) {
   const isLarge = size === 'large';
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

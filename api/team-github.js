@@ -89,22 +89,22 @@ async function fetchGitHubData() {
             const diffDays = Math.floor(diffHours / 24);
 
             if (diffHours < 1) {
-              lastSeen = 'pushed now';
+              lastSeen = 'active now';
               status = 'online';
             } else if (diffHours < 6) {
-              lastSeen = `pushed ${diffHours} hours ago`;
+              lastSeen = `active ${diffHours} hours ago`;
               status = 'coding';
             } else if (diffHours < 24) {
-              lastSeen = `pushed ${diffHours} hours ago`;
+              lastSeen = `last seen ${diffHours} hours ago`;
               status = 'away';
             } else if (diffDays < 7) {
-              lastSeen = `pushed ${diffDays} days ago`;
+              lastSeen = `last seen ${diffDays} days ago`;
               status = 'away';
             } else if (diffDays < 30) {
-              lastSeen = `pushed ${Math.floor(diffDays / 7)} weeks ago`;
+              lastSeen = `last seen ${Math.floor(diffDays / 7)} weeks ago`;
               status = 'away';
             } else {
-              lastSeen = 'pushed over a month ago';
+              lastSeen = 'inactive for a while';
               status = 'away';
             }
           }

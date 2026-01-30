@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import { Github, ExternalLink, User, GitBranch, Clock } from 'lucide-react';
+import { Github, ExternalLink, User, Clock } from 'lucide-react';
 
 const TeamMemberRow = ({ member, index }) => {
   return (
@@ -49,21 +49,14 @@ const TeamMemberRow = ({ member, index }) => {
           
           {/* GitHub Stats - only show valid data */}
           {(() => {
-            const validCommits = member.commits && !isNaN(member.commits) && member.commits > 0;
             const validLastSeen = member.lastSeen && member.lastSeen !== 'unknown' && member.lastSeen !== 'NaN';
             const validStatus = member.status && member.status !== 'unknown';
             
             // Only show the stats container if we have at least one valid piece of data
-            if (!validCommits && !validLastSeen && !validStatus) return null;
+            if (!validLastSeen && !validStatus) return null;
             
             return (
               <div className="flex items-center justify-center gap-4 mt-2 text-xs text-slate-500">
-                {validCommits && (
-                  <span className="flex items-center gap-1">
-                    <GitBranch className="w-3 h-3" />
-                    {member.commits} commits
-                  </span>
-                )}
                 {validLastSeen && (
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />

@@ -52,7 +52,7 @@ export default function HeroSection() {
         <div className="flex items-center gap-2">
           <span className="font-mono-accent">(env):</span>
           <span className="text-green-500 flex items-center gap-1 font-mono-accent-medium">
-             active
+            active
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
           </span>
         </div>
@@ -89,7 +89,7 @@ export default function HeroSection() {
           >
             AOSC
           </motion.h1>
-          
+
           {/* Subtle underline accent */}
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-cyan-400 rounded-full"></div>
         </motion.div>
@@ -102,7 +102,7 @@ export default function HeroSection() {
           className="relative mt-6"
         >
           <p className="text-slate-600 font-mono text-sm md:text-base tracking-wider">
-           COMMIT. MERGE. EVOLVE
+            COMMIT. MERGE. EVOLVE
           </p>
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-0.5 bg-cyan-400 rounded-full mt-1"></div>
         </motion.div>

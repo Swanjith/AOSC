@@ -8,91 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowRight, Terminal, User, Code } from 'lucide-react';
 import { fetchTeamGitHubData } from '@/utils/serverlessCache';
-
-// Real team members from AOSC organization (GitHub usernames only)
-const terminalMembers = [
-  {
-    id: 'swanjith-dev',
-    name: 'Swanjith',
-    username: 'swanjith',
-    skills: ['Systems', 'LINUX', 'AI'],
-    github_username: 'Swanjith',
-    avatar_url: 'https://media.licdn.com/dms/image/v2/D5603AQHeH5OI1HgXzg/profile-displayphoto-crop_800_800/B56ZvwAN.6HAAI-/0/1769258149443?e=1771459200&v=beta&t=XPiI9fsbW0fmi3KZsv25uSW5ED5ZC502L2NmhgiKXNc',
-    role: 'member'
-  },
-  {
-    id: 'yogi-blockchain',
-    name: 'Yogeshwara',
-    username: 'yogesh',
-    skills: ['Blockchain', 'Web3', 'React'],
-    github_username: 'Yogeshwara7',
-    avatar_url: 'https://media.licdn.com/dms/image/v2/D5635AQHIAPWuqzW77w/profile-framedphoto-shrink_800_800/B56Zv0vUFPIoAg-/0/1769337602608?e=1770264000&v=beta&t=iPW7G89BvxPFnZFdQRlW2glkw2imlJOzh6v5Mx-jOBA',
-    role: 'member'
-  },
-  {
-    id: 'akhilesh-dev',
-    name: 'Akhilesh',
-    username: 'akill-17',
-    skills: ['Java', 'Linux', 'Event Management'],
-    github_username: 'AKill-17',
-    avatar_url: null,
-    role: 'member'
-  },
-  {
-    id: 'karthik-dev',
-    name: 'Karthikeya J',
-    username: 'karthikeyaj',
-    skills: ['Backend', 'Node.js', 'APIs'],
-    github_username: 'KarthikeyaJ',
-    avatar_url: null,
-    role: 'member'
-  },
-  {
-    id: 'sumanth-dev',
-    name: 'Sumanth L',
-    username: 'sumanth-l',
-    skills: ['Mobile', 'Flutter', 'Dart'],
-    github_username: 'Sumanth-l',
-    avatar_url: null,
-    role: 'member'
-  },
-  {
-    id: 'codene0-dev',
-    name: 'C0deNe0',
-    username: 'c0dene0',
-    skills: ['Security', 'Penetration Testing', 'Cybersecurity'],
-    github_username: 'C0deNe0',
-    avatar_url: null,
-    role: 'member'
-  },
-  {
-    id: 'srujan-dev',
-    name: 'BN Srujan',
-    username: 'bnsrujan',
-    skills: ['Frontend', 'React', 'UI/UX'],
-    github_username: 'BNsrujan',
-    avatar_url: null,
-    role: 'member'
-  },
-  {
-    id: 'vinith-dev',
-    name: 'Shetty Vinith',
-    username: 'shettyvinith',
-    skills: ['Full Stack', 'JavaScript', 'Web Development'],
-    github_username: 'ShettyVinith',
-    avatar_url: null,
-    role: 'member'
-  },
-  {
-    id: 'dhanraj-dev',
-    name: 'Dhanraj SH',
-    username: 'dhanraj-sh',
-    skills: ['DevOps', 'Cloud', 'Infrastructure'],
-    github_username: 'Dhanraj-SH',
-    avatar_url: null,
-    role: 'member'
-  }
-];
+import { teamMembers } from '@/data/teamMembers';
 
 const TerminalWindow = ({ members, currentMember }) => {
   const [commandHistory, setCommandHistory] = useState([
@@ -284,7 +200,7 @@ export default function TeamPreview() {
 
   // Memoize base members to prevent recreation on every render
   const baseMembers = useMemo(() => {
-    return apiMembers.length > 0 ? apiMembers.slice(0, 9) : terminalMembers;
+    return apiMembers.length > 0 ? apiMembers.slice(0, 9) : teamMembers;
   }, [apiMembers]);
 
   // Fetch GitHub data for all members using global cache

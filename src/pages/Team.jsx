@@ -6,159 +6,8 @@ import TeamMemberCard from '@/components/team/TeamMemberCard';
 import TeamMemberList from '@/components/team/TeamMemberList';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-// GitHub API functions
-const fetchGitHubUserData = async (username) => {
-  try {
-    const userResponse = await fetch(`https://api.github.com/users/${username}`);
-    const userData = await userResponse.json();
-
-    const eventsResponse = await fetch(`https://api.github.com/users/${username}/events?per_page=10`);
-    const eventsData = await eventsResponse.json();
-
-    const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=5`);
-    const reposData = await reposResponse.json();
-
-    // Calculate last activity
-    const lastActivity = eventsData.length > 0 ? new Date(eventsData[0].created_at) : null;
-    const now = new Date();
-    let lastSeen = 'unknown';
-    let status = 'away';
-
-    if (lastActivity) {
-      const diffHours = Math.floor((now - lastActivity) / (1000 * 60 * 60));
-      const diffDays = Math.floor(diffHours / 24);
-
-      if (diffHours < 1) {
-        lastSeen = 'active now';
-        status = 'online';
-      } else if (diffHours < 24) {
-        lastSeen = `${diffHours} hours ago`;
-        status = diffHours < 6 ? 'coding' : 'away';
-      } else if (diffDays < 7) {
-        lastSeen = `${diffDays} days ago`;
-        status = 'away';
-      } else {
-        lastSeen = `${Math.floor(diffDays / 7)} weeks ago`;
-        status = 'away';
-      }
-    }
-
-    // Get current project (most recently updated repo)
-    const currentProject = reposData.length > 0 ? reposData[0].name : 'exploring';
-
-    // Approximate commits from public repos
-    const totalCommits = Math.min(Math.max(userData.public_repos * 15 + Math.floor(Math.random() * 100), 20), 500);
-
-    return {
-      name: userData.name || userData.login,
-      lastSeen,
-      status,
-      commits: totalCommits,
-      currentProject,
-      publicRepos: userData.public_repos,
-      followers: userData.followers,
-      bio: userData.bio
-    };
-  } catch (error) {
-    console.error(`Error fetching GitHub data for ${username}:`, error);
-    return {
-      name: username,
-      lastSeen: 'unknown',
-      status: 'away',
-      commits: Math.floor(Math.random() * 200) + 50,
-      currentProject: 'open-source',
-      publicRepos: 0,
-      followers: 0,
-      bio: null
-    };
-  }
-};
-
-// Real team members from AOSC organization
-const realTeamMembers = [
-  {
-    id: 'swanjith-dev',
-    name: 'Swanjith',
-    username: 'swanjith',
-    skills: ['Systems', 'LINUX', 'AI'],
-    github_username: 'Swanjith',
-    avatar_url: 'https://media.licdn.com/dms/image/v2/D5603AQHeH5OI1HgXzg/profile-displayphoto-crop_800_800/B56ZvwAN.6HAAI-/0/1769258149443?e=1771459200&v=beta&t=XPiI9fsbW0fmi3KZsv25uSW5ED5ZC502L2NmhgiKXNc',
-    role: 'member'
-  },
-  {
-    id: 'yogi-blockchain',
-    name: 'Yogeshwara',
-    username: 'yogesh',
-    skills: ['Blockchain', 'Web3', 'React'],
-    github_username: 'Yogeshwara7',
-    avatar_url: 'https://media.licdn.com/dms/image/v2/D5635AQHIAPWuqzW77w/profile-framedphoto-shrink_800_800/B56Zv0vUFPIoAg-/0/1769337602608?e=1770264000&v=beta&t=iPW7G89BvxPFnZFdQRlW2glkw2imlJOzh6v5Mx-jOBA',
-    role: 'member'
-  },
-  {
-    id: 'akhilesh-dev',
-    name: 'Akhilesh',
-    username: 'akill-17',
-    skills: ['Java', 'Linux', 'Event Management'],
-    github_username: 'AKill-17',
-    avatar_url: null,
-    role: 'member'
-  },
-  {
-    id: 'karthik-dev',
-    name: 'Karthikeya J',
-    username: 'karthikeyaj',
-    skills: ['Backend', 'Node.js', 'APIs'],
-    github_username: 'KarthikeyaJ',
-    avatar_url: null,
-    role: 'member'
-  },
-  {
-    id: 'sumanth-dev',
-    name: 'Sumanth L',
-    username: 'sumanth-l',
-    skills: ['Mobile', 'Flutter', 'Dart'],
-    github_username: 'Sumanth-l',
-    avatar_url: null,
-    role: 'member'
-  },
-  {
-    id: 'codene0-dev',
-    name: 'C0deNe0',
-    username: 'c0dene0',
-    skills: ['Security', 'Penetration Testing', 'Cybersecurity'],
-    github_username: 'C0deNe0',
-    avatar_url: null,
-    role: 'member'
-  },
-  {
-    id: 'srujan-dev',
-    name: 'BN Srujan',
-    username: 'bnsrujan',
-    skills: ['Frontend', 'React', 'UI/UX'],
-    github_username: 'BNsrujan',
-    avatar_url: null,
-    role: 'member'
-  },
-  {
-    id: 'vinith-dev',
-    name: 'Shetty Vinith',
-    username: 'shettyvinith',
-    skills: ['Full Stack', 'JavaScript', 'Web Development'],
-    github_username: 'ShettyVinith',
-    avatar_url: null,
-    role: 'member'
-  },
-  {
-    id: 'dhanraj-dev',
-    name: 'Dhanraj SH',
-    username: 'dhanraj-sh',
-    skills: ['DevOps', 'Cloud', 'Infrastructure'],
-    github_username: 'Dhanraj-SH',
-    avatar_url: null,
-    role: 'member'
-  }
-];
+import { fetchTeamGitHubData } from '@/utils/serverlessCache';
+import { teamMembers } from '@/data/teamMembers';
 
 export default function Team() {
   const [membersWithGitHubData, setMembersWithGitHubData] = useState([]);
@@ -170,24 +19,45 @@ export default function Team() {
     initialData: [],
   });
 
-  // Use API members if available, otherwise use real team members
-  const baseMembers = members.length > 0 ? members : realTeamMembers;
+  // Use API members if available, otherwise use shared team members data
+  const baseMembers = members.length > 0 ? members : teamMembers;
 
-  // Fetch GitHub data for all members
+  // Fetch GitHub data using serverless function
   useEffect(() => {
     const fetchAllGitHubData = async () => {
       setIsLoadingGitHub(true);
-      const membersWithData = await Promise.all(
-        baseMembers.map(async (member) => {
-          const githubData = await fetchGitHubUserData(member.github_username);
+      try {
+        // Get GitHub data from serverless function
+        const githubDataArray = await fetchTeamGitHubData();
+        
+        // Merge with base member data
+        const membersWithData = baseMembers.map(member => {
+          const githubData = githubDataArray.find(
+            gh => gh.username.toLowerCase() === member.github_username?.toLowerCase()
+          );
+          
           return {
             ...member,
-            ...githubData
+            ...githubData,
+            // Keep original member data as fallback
+            name: member.name || githubData?.name,
+            lastSeen: githubData?.lastSeen || 'unknown',
+            status: githubData?.status || 'away',
+            currentProject: githubData?.currentProject || 'exploring',
+            publicRepos: githubData?.publicRepos || 0,
+            followers: githubData?.followers || 0,
+            bio: githubData?.bio || null
           };
-        })
-      );
-      setMembersWithGitHubData(membersWithData);
-      setIsLoadingGitHub(false);
+        });
+        
+        setMembersWithGitHubData(membersWithData);
+      } catch (error) {
+        console.error('Error fetching GitHub data:', error);
+        // Use base members as fallback
+        setMembersWithGitHubData(baseMembers);
+      } finally {
+        setIsLoadingGitHub(false);
+      }
     };
 
     if (baseMembers.length > 0) {
