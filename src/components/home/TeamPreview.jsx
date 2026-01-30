@@ -91,13 +91,38 @@ const TerminalWindow = ({ members, currentMember }) => {
 };
 
 const MemberTabs = ({ members, currentMember, onMemberSelect }) => {
+  const containerRef = React.useRef(null);
+  const buttonRefs = React.useRef([]);
+
+  // Auto-scroll the active tab into center when currentMember changes
+  React.useEffect(() => {
+    const btn = buttonRefs.current[currentMember];
+    if (btn && containerRef.current) {
+      try {
+        btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      } catch (e) {
+        // fallback: manual centering
+        const container = containerRef.current;
+        const offset = btn.offsetLeft - (container.offsetWidth / 2) + (btn.offsetWidth / 2);
+        container.scrollTo({ left: offset, behavior: 'smooth' });
+      }
+    }
+  }, [currentMember]);
+
   return (
-    <div className="flex gap-1 mb-4">
+    <div
+      ref={containerRef}
+      className="flex gap-2 mb-4 -mx-2 px-2 overflow-x-auto snap-x snap-mandatory md:overflow-visible md:-mx-0 md:px-0"
+      role="tablist"
+    >
       {members.map((member, index) => (
         <button
           key={member.id}
+          ref={(el) => (buttonRefs.current[index] = el)}
           onClick={() => onMemberSelect(index)}
-          className={`px-4 py-2 rounded-t-lg font-mono text-sm transition-colors ${index === currentMember
+          role="tab"
+          aria-selected={index === currentMember}
+          className={`inline-flex flex-shrink-0 snap-start px-4 py-2 rounded-t-lg font-mono text-sm transition-colors ${index === currentMember
             ? 'bg-gray-900 text-green-400 border-b-2 border-green-400'
             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
