@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import { Github, ExternalLink } from 'lucide-react';
+import { Github, ExternalLink, User, GitBranch, Clock } from 'lucide-react';
 
 const TeamMemberRow = ({ member, index }) => {
   return (
@@ -35,7 +35,7 @@ const TeamMemberRow = ({ member, index }) => {
           )}
         </div>
 
-        {/* Center: Name */}
+        {/* Center: Name & GitHub Stats */}
         <div className="flex-1 md:text-center">
           <motion.h3
             className="text-xl md:text-2xl font-bold text-slate-900 group-hover:translate-x-1 transition-transform duration-200"
@@ -46,6 +46,40 @@ const TeamMemberRow = ({ member, index }) => {
           {member.title && (
             <p className="text-sm text-slate-500 mt-1">{member.title}</p>
           )}
+          
+          {/* GitHub Stats - only show valid data */}
+          {(() => {
+            const validCommits = member.commits && !isNaN(member.commits) && member.commits > 0;
+            const validLastSeen = member.lastSeen && member.lastSeen !== 'unknown' && member.lastSeen !== 'NaN';
+            const validStatus = member.status && member.status !== 'unknown';
+            
+            // Only show the stats container if we have at least one valid piece of data
+            if (!validCommits && !validLastSeen && !validStatus) return null;
+            
+            return (
+              <div className="flex items-center justify-center gap-4 mt-2 text-xs text-slate-500">
+                {validCommits && (
+                  <span className="flex items-center gap-1">
+                    <GitBranch className="w-3 h-3" />
+                    {member.commits} commits
+                  </span>
+                )}
+                {validLastSeen && (
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {member.lastSeen}
+                  </span>
+                )}
+                {validStatus && (
+                  <div className={`w-2 h-2 rounded-full ${
+                    member.status === 'online' ? 'bg-green-500' :
+                    member.status === 'coding' ? 'bg-blue-500' :
+                    'bg-yellow-500'
+                  }`}></div>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Right: GitHub + Photo */}
@@ -67,13 +101,17 @@ const TeamMemberRow = ({ member, index }) => {
           )}
 
           {/* Profile Photo */}
-          <div className="w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden bg-slate-100 ring-2 ring-slate-200 flex-shrink-0">
-            <img
-              src={member.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.name}`}
-              alt={`${member.name} profile`}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
+          <div className="w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden bg-slate-100 ring-2 ring-slate-200 flex-shrink-0 flex items-center justify-center">
+            {member.avatar_url ? (
+              <img
+                src={member.avatar_url}
+                alt={`${member.name} profile`}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <User className="w-6 h-6 text-slate-400" />
+            )}
           </div>
         </div>
       </div>
