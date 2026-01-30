@@ -6,7 +6,7 @@ export default function HeroSection() {
   // Generate modern particle pattern
   const generateParticles = () => {
     const particles = [];
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 48; i++) {
       particles.push(
         <motion.div
           key={i}
