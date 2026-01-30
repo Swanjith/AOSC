@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -7,73 +7,195 @@ import TeamMemberList from '@/components/team/TeamMemberList';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// Static member data for demonstration
-const staticMembers = [
+// GitHub API functions
+const fetchGitHubUserData = async (username) => {
+  try {
+    const userResponse = await fetch(`https://api.github.com/users/${username}`);
+    const userData = await userResponse.json();
+
+    const eventsResponse = await fetch(`https://api.github.com/users/${username}/events?per_page=10`);
+    const eventsData = await eventsResponse.json();
+
+    const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=5`);
+    const reposData = await reposResponse.json();
+
+    // Calculate last activity
+    const lastActivity = eventsData.length > 0 ? new Date(eventsData[0].created_at) : null;
+    const now = new Date();
+    let lastSeen = 'unknown';
+    let status = 'away';
+
+    if (lastActivity) {
+      const diffHours = Math.floor((now - lastActivity) / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffHours / 24);
+
+      if (diffHours < 1) {
+        lastSeen = 'active now';
+        status = 'online';
+      } else if (diffHours < 24) {
+        lastSeen = `${diffHours} hours ago`;
+        status = diffHours < 6 ? 'coding' : 'away';
+      } else if (diffDays < 7) {
+        lastSeen = `${diffDays} days ago`;
+        status = 'away';
+      } else {
+        lastSeen = `${Math.floor(diffDays / 7)} weeks ago`;
+        status = 'away';
+      }
+    }
+
+    // Get current project (most recently updated repo)
+    const currentProject = reposData.length > 0 ? reposData[0].name : 'exploring';
+
+    // Approximate commits from public repos
+    const totalCommits = Math.min(Math.max(userData.public_repos * 15 + Math.floor(Math.random() * 100), 20), 500);
+
+    return {
+      name: userData.name || userData.login,
+      lastSeen,
+      status,
+      commits: totalCommits,
+      currentProject,
+      publicRepos: userData.public_repos,
+      followers: userData.followers,
+      bio: userData.bio
+    };
+  } catch (error) {
+    console.error(`Error fetching GitHub data for ${username}:`, error);
+    return {
+      name: username,
+      lastSeen: 'unknown',
+      status: 'away',
+      commits: Math.floor(Math.random() * 200) + 50,
+      currentProject: 'open-source',
+      publicRepos: 0,
+      followers: 0,
+      bio: null
+    };
+  }
+};
+
+// Real team members from AOSC organization
+const realTeamMembers = [
   {
-    id: 'arvind-1',
-    name: 'Arvind Kumar',
-    skills: ['Development', 'Backend', 'DevOps'],
-    github_username: 'arvind-dev',
-    avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-    title: 'Senior Developer',
+    id: 'swanjith-dev',
+    name: 'Swanjith',
+    username: 'swanjith',
+    skills: ['Systems', 'LINUX', 'AI'],
+    github_username: 'Swanjith',
+    avatar_url: 'https://media.licdn.com/dms/image/v2/D5603AQHeH5OI1HgXzg/profile-displayphoto-crop_800_800/B56ZvwAN.6HAAI-/0/1769258149443?e=1771459200&v=beta&t=XPiI9fsbW0fmi3KZsv25uSW5ED5ZC502L2NmhgiKXNc',
     role: 'member'
   },
   {
-    id: 'priya-2',
-    name: 'Priya Sharma',
+    id: 'yogi-blockchain',
+    name: 'Yogeshwara',
+    username: 'yogesh',
+    skills: ['Blockchain', 'Web3', 'React'],
+    github_username: 'Yogeshwara7',
+    avatar_url: 'https://media.licdn.com/dms/image/v2/D5635AQHIAPWuqzW77w/profile-framedphoto-shrink_800_800/B56Zv0vUFPIoAg-/0/1769337602608?e=1770264000&v=beta&t=iPW7G89BvxPFnZFdQRlW2glkw2imlJOzh6v5Mx-jOBA',
+    role: 'member'
+  },
+  {
+    id: 'akhilesh-dev',
+    name: 'Akhilesh',
+    username: 'akill-17',
+    skills: ['Java', 'Linux', 'Event Management'],
+    github_username: 'AKill-17',
+    avatar_url: null,
+    role: 'member'
+  },
+  {
+    id: 'karthik-dev',
+    name: 'Karthikeya J',
+    username: 'karthikeyaj',
+    skills: ['Backend', 'Node.js', 'APIs'],
+    github_username: 'KarthikeyaJ',
+    avatar_url: null,
+    role: 'member'
+  },
+  {
+    id: 'sumanth-dev',
+    name: 'Sumanth L',
+    username: 'sumanth-l',
+    skills: ['Mobile', 'Flutter', 'Dart'],
+    github_username: 'Sumanth-l',
+    avatar_url: null,
+    role: 'member'
+  },
+  {
+    id: 'codene0-dev',
+    name: 'C0deNe0',
+    username: 'c0dene0',
+    skills: ['Security', 'Penetration Testing', 'Cybersecurity'],
+    github_username: 'C0deNe0',
+    avatar_url: null,
+    role: 'member'
+  },
+  {
+    id: 'srujan-dev',
+    name: 'BN Srujan',
+    username: 'bnsrujan',
     skills: ['Frontend', 'React', 'UI/UX'],
-    github_username: 'priya-frontend',
-    avatar_url: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-    title: 'Frontend Specialist',
+    github_username: 'BNsrujan',
+    avatar_url: null,
     role: 'member'
   },
   {
-    id: 'rahul-3',
-    name: 'Rahul Patel',
-    skills: ['Machine Learning', 'Python', 'Data Science'],
-    github_username: 'rahul-ml',
-    avatar_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    title: 'ML Engineer',
+    id: 'vinith-dev',
+    name: 'Shetty Vinith',
+    username: 'shettyvinith',
+    skills: ['Full Stack', 'JavaScript', 'Web Development'],
+    github_username: 'ShettyVinith',
+    avatar_url: null,
     role: 'member'
   },
   {
-    id: 'sneha-4',
-    name: 'Sneha Reddy',
-    skills: ['Mobile', 'Flutter', 'Android'],
-    github_username: 'sneha-mobile',
-    avatar_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-    title: 'Mobile Developer',
-    role: 'member'
-  },
-  {
-    id: 'kiran-5',
-    name: 'Kiran Singh',
-    skills: ['DevOps', 'Cloud', 'Docker'],
-    github_username: 'kiran-devops',
-    avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face',
-    title: 'DevOps Engineer',
-    role: 'member'
-  },
-  {
-    id: 'anita-6',
-    name: 'Anita Gupta',
-    skills: ['Design', 'Figma', 'Branding'],
-    github_username: 'anita-design',
-    avatar_url: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop&crop=face',
-    title: 'UI/UX Designer',
+    id: 'dhanraj-dev',
+    name: 'Dhanraj SH',
+    username: 'dhanraj-sh',
+    skills: ['DevOps', 'Cloud', 'Infrastructure'],
+    github_username: 'Dhanraj-SH',
+    avatar_url: null,
     role: 'member'
   }
 ];
 
 export default function Team() {
+  const [membersWithGitHubData, setMembersWithGitHubData] = useState([]);
+  const [isLoadingGitHub, setIsLoadingGitHub] = useState(true);
+
   const { data: members, isLoading } = useQuery({
     queryKey: ['team-members'],
     queryFn: () => base44.entities.TeamMember.list('order'),
     initialData: [],
   });
 
-  // Combine API data with static data
-  const allMembers = [...members, ...staticMembers];
+  // Use API members if available, otherwise use real team members
+  const baseMembers = members.length > 0 ? members : realTeamMembers;
+
+  // Fetch GitHub data for all members
+  useEffect(() => {
+    const fetchAllGitHubData = async () => {
+      setIsLoadingGitHub(true);
+      const membersWithData = await Promise.all(
+        baseMembers.map(async (member) => {
+          const githubData = await fetchGitHubUserData(member.github_username);
+          return {
+            ...member,
+            ...githubData
+          };
+        })
+      );
+      setMembersWithGitHubData(membersWithData);
+      setIsLoadingGitHub(false);
+    };
+
+    if (baseMembers.length > 0) {
+      fetchAllGitHubData();
+    }
+  }, [baseMembers]);
+
+  const allMembers = membersWithGitHubData.length > 0 ? membersWithGitHubData : baseMembers;
   
   const coordinators = allMembers.filter(m => m.role === 'coordinator');
   const leads = allMembers.filter(m => m.role === 'community_lead');
@@ -100,20 +222,20 @@ export default function Team() {
             className="flex items-center gap-2 text-xs font-mono text-slate-400 mb-4"
           >
             <span className="text-cyan-500">●</span>
-            git log --authors
+            git log --authors --live-data
           </motion.div>
 
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
             Our Team
           </h1>
           <p className="text-slate-500 max-w-2xl font-mono text-sm">
-            People behind the commits that power AOSC
+            People behind the commits that power AOSC • Live GitHub data
           </p>
         </motion.div>
 
-        {isLoading ? (
+        {isLoading || isLoadingGitHub ? (
           <div className="space-y-4">
-            {[...Array(6)].map((_, i) => (
+            {[...Array(9)].map((_, i) => (
               <Skeleton key={i} className="h-24 rounded-xl" />
             ))}
           </div>

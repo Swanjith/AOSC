@@ -1,143 +1,374 @@
-import React from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowRight, Github, ExternalLink } from 'lucide-react';
+import { ArrowRight, Terminal, User, Code } from 'lucide-react';
+import { fetchTeamGitHubData } from '@/utils/serverlessCache';
 
-// Static preview members (2 people as requested)
-const previewMembers = [
+// Real team members from AOSC organization (GitHub usernames only)
+const terminalMembers = [
   {
-    id: 'Swanjith-preview',
-    name: 'Swanjith AK',
+    id: 'swanjith-dev',
+    name: 'Swanjith',
+    username: 'swanjith',
     skills: ['Systems', 'LINUX', 'AI'],
     github_username: 'Swanjith',
     avatar_url: 'https://media.licdn.com/dms/image/v2/D5603AQHeH5OI1HgXzg/profile-displayphoto-crop_800_800/B56ZvwAN.6HAAI-/0/1769258149443?e=1771459200&v=beta&t=XPiI9fsbW0fmi3KZsv25uSW5ED5ZC502L2NmhgiKXNc',
-    // title: 'Senior Developer',
     role: 'member'
   },
   {
-    id: 'yogi-preview',
-    name: 'Yogeshwara B',
+    id: 'yogi-blockchain',
+    name: 'Yogeshwara',
+    username: 'yogesh',
     skills: ['Blockchain', 'Web3', 'React'],
     github_username: 'Yogeshwara7',
     avatar_url: 'https://media.licdn.com/dms/image/v2/D5635AQHIAPWuqzW77w/profile-framedphoto-shrink_800_800/B56Zv0vUFPIoAg-/0/1769337602608?e=1770264000&v=beta&t=iPW7G89BvxPFnZFdQRlW2glkw2imlJOzh6v5Mx-jOBA',
-    // title: 'Frontend Specialist',
+    role: 'member'
+  },
+  {
+    id: 'akhilesh-dev',
+    name: 'Akhilesh',
+    username: 'akill-17',
+    skills: ['Java', 'Linux', 'Event Management'],
+    github_username: 'AKill-17',
+    avatar_url: null,
+    role: 'member'
+  },
+  {
+    id: 'karthik-dev',
+    name: 'Karthikeya J',
+    username: 'karthikeyaj',
+    skills: ['Backend', 'Node.js', 'APIs'],
+    github_username: 'KarthikeyaJ',
+    avatar_url: null,
+    role: 'member'
+  },
+  {
+    id: 'sumanth-dev',
+    name: 'Sumanth L',
+    username: 'sumanth-l',
+    skills: ['Mobile', 'Flutter', 'Dart'],
+    github_username: 'Sumanth-l',
+    avatar_url: null,
+    role: 'member'
+  },
+  {
+    id: 'codene0-dev',
+    name: 'C0deNe0',
+    username: 'c0dene0',
+    skills: ['Security', 'Penetration Testing', 'Cybersecurity'],
+    github_username: 'C0deNe0',
+    avatar_url: null,
+    role: 'member'
+  },
+  {
+    id: 'srujan-dev',
+    name: 'BN Srujan',
+    username: 'bnsrujan',
+    skills: ['Frontend', 'React', 'UI/UX'],
+    github_username: 'BNsrujan',
+    avatar_url: null,
+    role: 'member'
+  },
+  {
+    id: 'vinith-dev',
+    name: 'Shetty Vinith',
+    username: 'shettyvinith',
+    skills: ['Full Stack', 'JavaScript', 'Web Development'],
+    github_username: 'ShettyVinith',
+    avatar_url: null,
+    role: 'member'
+  },
+  {
+    id: 'dhanraj-dev',
+    name: 'Dhanraj SH',
+    username: 'dhanraj-sh',
+    skills: ['DevOps', 'Cloud', 'Infrastructure'],
+    github_username: 'Dhanraj-SH',
+    avatar_url: null,
     role: 'member'
   }
 ];
 
-const MemberPreviewRow = ({ member, index }) => {
+const TerminalWindow = ({ members, currentMember }) => {
+  const [commandHistory, setCommandHistory] = useState([
+    '$ ls /team/members',
+    'Found 9 active developers...',
+    ''
+  ]);
+
+  const member = members[currentMember];
+
+  useEffect(() => {
+    // Filter out invalid values for dynamic data only
+    const filterDynamicValue = (value) => {
+      if (value === null || value === undefined || value === 'unknown' || value === 'NaN' ||
+        (typeof value === 'number' && isNaN(value))) {
+        return null;
+      }
+      return value;
+    };
+
+    const commands = [
+      `$ cat /team/${member.username}.profile`,
+      `Name: ${member.name}`, // Always show hardcoded name
+      filterDynamicValue(member.status) && `Status: ${member.status}`,
+      filterDynamicValue(member.lastSeen) && `Last seen: ${member.lastSeen}`,
+      filterDynamicValue(member.currentProject) && `Current project: ${member.currentProject}`,
+      `Skills: ${member.skills.join(', ')}`, // Always show hardcoded skills
+      ''
+    ].filter(Boolean); // Remove null/false entries
+
+    setCommandHistory(commands);
+  }, [member]);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.1 }}
-      className="group relative bg-white border border-slate-100 rounded-xl p-6 hover:shadow-lg hover:border-slate-200 transition-all duration-300"
-    >
-      <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
-        {/* Left: Skills */}
-        <div className="flex flex-wrap gap-2 md:min-w-[200px]">
-          {member.skills && member.skills.length > 0 ? (
-            member.skills.slice(0, 3).map((skill, idx) => (
-              <Badge
-                key={idx}
-                variant="outline"
-                className="text-xs uppercase font-medium border-cyan-200 text-green-700 bg-slate-50 hover:bg-cyan-100 transition-colors"
+    <div className="bg-gray-900 rounded-lg p-6 font-mono text-sm">
+      {/* Terminal Header */}
+      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-700">
+        <div className="flex gap-2">
+          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+          <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+        </div>
+        <span className="text-gray-400 ml-2">team-browser — bash</span>
+      </div>
+
+      {/* Terminal Content */}
+      <div className="space-y-1">
+        {commandHistory.map((line, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: index * 0.1 }}
+            className={`${line.startsWith('$')
+              ? 'text-green-400'
+              : line.includes(':')
+                ? 'text-blue-300'
+                : 'text-gray-300'
+              }`}
+          >
+            {line}
+          </motion.div>
+        ))}
+
+        {/* Blinking cursor */}
+        <div className="flex items-center">
+          <span className="text-green-400">$ </span>
+          <span className="text-white ml-1">_</span>
+          <motion.span
+            animate={{ opacity: [1, 0] }}
+            transition={{ duration: 1, repeat: Infinity }}
+            className="text-green-400"
+          >
+            |
+          </motion.span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MemberTabs = ({ members, currentMember, onMemberSelect }) => {
+  return (
+    <div className="flex gap-1 mb-4">
+      {members.map((member, index) => (
+        <button
+          key={member.id}
+          onClick={() => onMemberSelect(index)}
+          className={`px-4 py-2 rounded-t-lg font-mono text-sm transition-colors ${index === currentMember
+            ? 'bg-gray-900 text-green-400 border-b-2 border-green-400'
+            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+        >
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${member.status === 'online' ? 'bg-green-500' :
+              member.status === 'coding' ? 'bg-blue-500' :
+                'bg-yellow-500'
+              }`}></div>
+            {member.username}
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+};
+
+const MemberCard = ({ member }) => {
+  return (
+    <div className="bg-white rounded-lg p-6 border border-gray-200">
+      <div className="flex flex-col items-center text-center">
+        {/* Profile Photo */}
+        <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 mb-4 ring-4 ring-gray-100 flex items-center justify-center">
+          {member.avatar_url ? (
+            <img
+              src={member.avatar_url}
+              alt={member.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <User className="w-8 h-8 text-gray-400" />
+            </div>
+          )}
+        </div>
+
+        <div className="w-full">
+          {/* Name and Status */}
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <h3 className="text-2xl font-bold text-gray-900">{member.name}</h3>
+            <div className={`w-3 h-3 rounded-full ${member.status === 'online' ? 'bg-green-500' :
+              member.status === 'coding' ? 'bg-blue-500' :
+                'bg-yellow-500'
+              }`}></div>
+          </div>
+
+          {/* Username */}
+          <div className="flex items-center justify-center gap-4 text-base text-gray-600 mb-4">
+            <span className="flex items-center gap-1">
+              <User className="w-4 h-4" />
+              <span className="font-mono">@{member.username}</span>
+            </span>
+          </div>
+
+          {/* Skills */}
+          <div className="flex flex-wrap justify-center gap-2 mb-4">
+            {member.skills.map((skill, index) => (
+              <span
+                key={index}
+                className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm font-mono font-medium"
               >
                 {skill}
-              </Badge>
-            ))
-          ) : (
-            <Badge
-              variant="outline"
-              className="text-xs uppercase font-medium border-slate-200 text-slate-500 bg-slate-50"
-            >
-              Developer
-            </Badge>
-          )}
-        </div>
+              </span>
+            ))}
+          </div>
 
-        {/* Center: Name */}
-        <div className="flex-1 md:text-center">
-          <motion.h3
-            className="text-xl md:text-2xl font-bold text-slate-900 group-hover:translate-x-1 transition-transform duration-200"
-            whileHover={{ x: 4 }}
-          >
-            {member.name}
-          </motion.h3>
-          {member.title && (
-            <p className="text-sm text-slate-500 mt-1">{member.title}</p>
-          )}
-        </div>
-
-        {/* Right: GitHub + Photo */}
-        <div className="flex items-center gap-4 md:min-w-[200px] md:justify-end">
           {/* GitHub Link */}
           {member.github_username && (
             <a
               href={`https://github.com/${member.github_username}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors group/link"
+              className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors text-base"
             >
-              <Github className="w-4 h-4" />
-              <span className="group-hover/link:underline font-mono">
-                {member.github_username}
-              </span>
-              <ExternalLink className="w-3 h-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
+              <Code className="w-5 h-5" />
+              <span className="font-mono">View Profile</span>
             </a>
           )}
-
-          {/* Profile Photo */}
-          <div className="w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden bg-slate-100 ring-2 ring-slate-200 flex-shrink-0">
-            <img
-              src={member.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.name}`}
-              alt={`${member.name} profile`}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          </div>
         </div>
       </div>
-
-      {/* Hover background effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-cyan-50/0 via-cyan-50/20 to-cyan-50/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none" />
-    </motion.div>
+    </div>
   );
 };
 
 export default function TeamPreview() {
+  const [currentMember, setCurrentMember] = useState(0);
+  const [membersWithGitHubData, setMembersWithGitHubData] = useState([]);
+  const [isLoadingGitHub, setIsLoadingGitHub] = useState(true);
+  const fetchedRef = useRef(false); // Prevent React Strict Mode duplication
+
   const { data: apiMembers, isLoading } = useQuery({
     queryKey: ['team-preview'],
     queryFn: () => base44.entities.TeamMember.filter(
-      { role: 'member' }, 
-      'order', 
-      2
+      { role: 'member' },
+      'order',
+      9
     ),
     initialData: [],
   });
 
-  // Use API members if available, otherwise use static preview members
-  const displayMembers = apiMembers.length > 0 ? apiMembers.slice(0, 2) : previewMembers;
+  // Memoize base members to prevent recreation on every render
+  const baseMembers = useMemo(() => {
+    return apiMembers.length > 0 ? apiMembers.slice(0, 9) : terminalMembers;
+  }, [apiMembers]);
+
+  // Fetch GitHub data for all members using global cache
+  useEffect(() => {
+    // Prevent duplicate fetching in React Strict Mode
+    if (fetchedRef.current) {
+      console.log('Skipping duplicate fetch (React Strict Mode)');
+      return;
+    }
+
+    const fetchAllGitHubData = async () => {
+      console.log('Fetching team data from serverless function');
+      fetchedRef.current = true;
+      setIsLoadingGitHub(true);
+
+      try {
+        // Single call to serverless function gets ALL team data
+        const githubDataArray = await fetchTeamGitHubData();
+        
+        // Merge with base member data
+        const membersWithData = baseMembers.map((member) => {
+          const githubData = githubDataArray.find(
+            data => data.username === member.github_username
+          ) || {};
+
+          return {
+            ...member, // Keep id, username, github_username, avatar_url, role
+            name: member.name, // Hardcoded from terminal members
+            skills: member.skills, // Hardcoded from terminal members
+            // Dynamic data from serverless API
+            lastSeen: githubData.lastSeen || 'unknown',
+            status: githubData.status || 'away',
+            currentProject: githubData.currentProject || 'unknown',
+            publicRepos: githubData.publicRepos || 0,
+            followers: githubData.followers || 0,
+            bio: githubData.bio || null
+          };
+        });
+
+        console.log('Successfully merged serverless data with team members');
+        setMembersWithGitHubData(membersWithData);
+      } catch (error) {
+        console.error('Error fetching from serverless:', error);
+        // Fallback to base members if serverless fails
+        setMembersWithGitHubData(baseMembers);
+      } finally {
+        setIsLoadingGitHub(false);
+      }
+    };
+
+    if (baseMembers.length > 0) {
+      fetchAllGitHubData();
+    }
+
+    // Cleanup function to reset fetch flag if component unmounts
+    return () => {
+      fetchedRef.current = false;
+    };
+  }, [baseMembers]);
+
+  const displayMembers = membersWithGitHubData.length > 0 ? membersWithGitHubData : baseMembers;
+
+  // Auto-cycle through members
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentMember((prev) => (prev + 1) % displayMembers.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [displayMembers.length]);
 
   return (
     <section className="py-24 px-6 bg-slate-50">
       <div className="max-w-6xl mx-auto">
-        {/* System Log Header */}
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           className="flex items-center gap-2 text-xs font-mono text-slate-400 mb-4"
         >
+          <Terminal className="w-4 h-4 text-green-500" />
           <span className="text-green-500">●</span>
-          git log --authors
+          ./browse_team.sh --live-data
         </motion.div>
 
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
@@ -148,7 +379,7 @@ export default function TeamPreview() {
               viewport={{ once: true }}
               className="text-4xl md:text-5xl font-bold text-slate-900"
             >
-              Community Members
+              Team Browser
             </motion.h2>
             <motion.div
               initial={{ opacity: 0 }}
@@ -156,30 +387,50 @@ export default function TeamPreview() {
               viewport={{ once: true }}
               className="text-slate-500 font-mono text-sm mt-2"
             >
-              People behind the commits that power AOSC
+              Live GitHub data • {displayMembers.length} developers online
             </motion.div>
           </div>
-          
+
           <Link to={createPageUrl('Team')}>
             <Button variant="outline" className="rounded-full group cursor-hover">
-              View All Team
+              View Full Directory
               <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
         </div>
 
-        {/* Members Preview List */}
-        {isLoading ? (
+        {/* Terminal Interface */}
+        {isLoading || isLoadingGitHub ? (
           <div className="space-y-4">
-            {[...Array(2)].map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-xl" />
-            ))}
+            <div className="flex gap-1 mb-4">
+              {[1, 2, 3].map(i => (
+                <Skeleton key={i} className="h-10 w-24 rounded-t-lg" />
+              ))}
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <Skeleton className="h-64 rounded-lg" />
+              <Skeleton className="h-64 rounded-lg" />
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
-            {displayMembers.map((member, index) => (
-              <MemberPreviewRow key={member.id} member={member} index={index} />
-            ))}
+            {/* Member Tabs */}
+            <MemberTabs
+              members={displayMembers}
+              currentMember={currentMember}
+              onMemberSelect={setCurrentMember}
+            />
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Terminal Window */}
+              <TerminalWindow
+                members={displayMembers}
+                currentMember={currentMember}
+              />
+
+              {/* Member Card */}
+              <MemberCard member={displayMembers[currentMember]} />
+            </div>
           </div>
         )}
       </div>
