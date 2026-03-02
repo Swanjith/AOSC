@@ -34,8 +34,7 @@ export default function CommunityHighlight() {
       tag: "workshop",
       bgColor: "#f5f5f5",
       textColor: "#2d2d2d",
-      date: "Oct 17-18",
-      spots: 23
+      date: "Oct 17-18"
     },
     {
       id: 3,
@@ -117,7 +116,6 @@ export default function CommunityHighlight() {
             <p className="opacity-90 text-sm mb-4">{updates[1].desc}</p>
             <div className="text-sm">
               <div className="font-medium">{updates[1].date}</div>
-              <div className="opacity-75">{updates[1].spots} spots left</div>
             </div>
           </div>
         </div>

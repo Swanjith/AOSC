@@ -7,55 +7,115 @@ const HighlightModal = ({ isOpen, onClose, item, type }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl max-w-4xl w-full my-8"
       >
-        {/* Header */}
+        {/* Header with Image */}
         <div className="relative">
-          <div className="h-48 bg-gradient-to-br from-slate-800 to-slate-900 rounded-t-2xl flex items-center justify-center">
-            <div className="text-center text-white">
-              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                <span className="text-2xl font-bold">
-                  {type === 'community' ? '🎙️' : '🎯'}
-                </span>
-              </div>
-              <h2 className="text-3xl font-bold">{item.name || item.title}</h2>
+          {item.image_url ? (
+            <div className="h-64 md:h-80 overflow-hidden rounded-t-2xl">
+              <img 
+                src={item.image_url} 
+                alt={item.title}
+                className="w-full h-full object-cover"
+              />
             </div>
-          </div>
+          ) : (
+            <div className="h-48 bg-gradient-to-br from-slate-800 to-slate-900 rounded-t-2xl flex items-center justify-center">
+              <div className="text-center text-white">
+                <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                  <span className="text-2xl font-bold">
+                    {type === 'community' ? '🎙️' : '🎯'}
+                  </span>
+                </div>
+                <h2 className="text-3xl font-bold">{item.name || item.title}</h2>
+              </div>
+            </div>
+          )}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+            className="absolute top-4 right-4 w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-8">
-          <div className="mb-6">
-            <span className="text-sm font-semibold text-green-500 uppercase tracking-wider">
-              {type === 'community' ? 'MEDIA' : 'EVENT'}
+        <div className="p-6 md:p-8 max-h-[60vh] overflow-y-auto">
+          {/* Date Badge */}
+          {item.date && (
+            <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+              <Calendar className="w-4 h-4" />
+              <span className="font-medium">{item.date}</span>
+            </div>
+          )}
+
+          {/* Category Badge */}
+          <div className="mb-4">
+            <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">
+              {type === 'community' ? 'MEDIA' : item.category?.toUpperCase() || 'EVENT'}
             </span>
           </div>
 
-          <h3 className="text-2xl font-bold text-slate-900 mb-4">
+          <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">
             {item.title}
           </h3>
 
-          <p className="text-slate-600 leading-relaxed mb-8">
-            {item.description}
-          </p>
+          {/* Blog Content */}
+          {item.blogContent ? (
+            <div className="prose prose-slate max-w-none">
+              {item.blogContent.map((section, idx) => (
+                <div key={idx} className="mb-6">
+                  {section.type === 'paragraph' && (
+                    <p className="text-slate-600 leading-relaxed mb-4">{section.content}</p>
+                  )}
+                  {section.type === 'heading' && (
+                    <h4 className="text-xl font-semibold text-slate-900 mb-3 mt-6">{section.content}</h4>
+                  )}
+                  {section.type === 'list' && (
+                    <ul className="list-disc list-inside space-y-2 text-slate-600 mb-4">
+                      {section.items.map((listItem, i) => (
+                        <li key={i}>{listItem}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-slate-600 leading-relaxed mb-8">
+              {item.description}
+            </p>
+          )}
+
+          {/* Image Gallery */}
+          {item.gallery && item.gallery.length > 0 && (
+            <div className="mt-8">
+              <h4 className="text-lg font-semibold text-slate-900 mb-4">Event Gallery</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {item.gallery.map((img, idx) => (
+                  <div key={idx} className="aspect-video rounded-lg overflow-hidden border border-gray-200">
+                    <img 
+                      src={img} 
+                      alt={`Gallery ${idx + 1}`}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Features */}
           {item.features && item.features.length > 0 && (
-            <div className="space-y-4">
-              <h4 className="font-semibold text-slate-900">Key Features:</h4>
+            <div className="space-y-4 mt-8">
+              <h4 className="font-semibold text-slate-900">Key Highlights:</h4>
               {item.features.map((feature, idx) => (
-                <div key={idx} className="border-l-4 border-green-500 pl-4">
+                <div key={idx} className="border-l-4 border-indigo-500 pl-4 py-2">
                   <h5 className="font-medium text-slate-900">{feature.title}</h5>
                   <p className="text-slate-600 text-sm">{feature.description}</p>
                 </div>
@@ -63,13 +123,15 @@ const HighlightModal = ({ isOpen, onClose, item, type }) => {
             </div>
           )}
 
-          {item.date && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Calendar className="w-4 h-4" />
-                <span className="font-medium">Event Date:</span>
-                <span>{item.date}</span>
-              </div>
+          {/* Stats */}
+          {item.stats && (
+            <div className="grid grid-cols-3 gap-4 mt-8 p-6 bg-slate-50 rounded-xl">
+              {item.stats.map((stat, idx) => (
+                <div key={idx} className="text-center">
+                  <div className="text-2xl font-bold text-indigo-600">{stat.value}</div>
+                  <div className="text-sm text-slate-600">{stat.label}</div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -175,49 +237,153 @@ export default function StaticHighlights({ searchTerm = '', category = 'all' }) 
 
   // Static highlight data
   const highlights = [
-    // {
-    //   id: 'sosc-podcast',
-    //   type: 'community',
-    //   name: "SOSC",
-    //   title: "SOSC PODCAST",
-    //   description: "Dive into the stories behind SOSC's journey, challenges, and discussions with industry experts",
-    //   category: 'media',
-    //   features: [
-    //     {
-    //       title: "Industry Insights",
-    //       description: "Deep conversations with tech leaders and innovators"
-    //     },
-    //     {
-    //       title: "Community Stories",
-    //       description: "Behind-the-scenes look at SOSC's growth and impact"
-    //     },
-    //     {
-    //       title: "Technical Discussions",
-    //       description: "Exploring cutting-edge technologies and trends"
-    //     }
-    //   ]
-    // },
     {
-      id: 'UI-Path',
+      id: 'uipath-workshop',
       type: 'workshop',
-      title: "UI-Path Workshop",
-      description: "Join us for an exciting 48-hour hackathon where innovation meets collaboration. Build amazing projects with fellow developers.",
-      date: "March 15-17, 2024",
-      category: "hackathon",
-      image_url: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400",
-      is_featured: true
+      title: "UiPath Automation Workshop",
+      description: "An intensive hands-on workshop exploring the power of Robotic Process Automation (RPA) with UiPath, where students learned to automate repetitive tasks and build intelligent workflows.",
+      date: "September 24, 2025",
+      category: "workshop",
+      image_url: "/UI_Path0.jpeg",
+      is_featured: true,
+      blogContent: [
+        {
+          type: 'paragraph',
+          content: "On September 24, 2025, AOSC hosted an engaging UiPath workshop that introduced students to the world of Robotic Process Automation. The session was designed to provide hands-on experience with UiPath Studio, one of the leading RPA platforms in the industry."
+        },
+        {
+          type: 'heading',
+          content: 'What We Covered'
+        },
+        {
+          type: 'paragraph',
+          content: "Participants dove deep into automation fundamentals, learning how to design, develop, and deploy software robots that can mimic human actions. The workshop covered everything from basic automation concepts to advanced workflow design patterns."
+        },
+        {
+          type: 'list',
+          items: [
+            'Introduction to RPA and its real-world applications',
+            'UiPath Studio interface and components',
+            'Building automated workflows for data entry and web scraping',
+            'Working with selectors and UI elements',
+            'Error handling and debugging techniques',
+            'Best practices for scalable automation'
+          ]
+        },
+        {
+          type: 'heading',
+          content: 'Key Takeaways'
+        },
+        {
+          type: 'paragraph',
+          content: "Students left the workshop with practical skills they could immediately apply to automate repetitive tasks in their daily work. Many participants successfully built their first automation bot during the session, automating tasks like form filling, data extraction, and report generation."
+        }
+      ],
+      stats: [
+        { value: '50+', label: 'Participants' },
+        { value: '4hrs', label: 'Duration' },
+        { value: '15+', label: 'Bots Created' }
+      ],
+      features: [
+        {
+          title: "Hands-on Learning",
+          description: "Every participant built real automation workflows during the workshop"
+        },
+        {
+          title: "Industry Expert",
+          description: "Led by experienced RPA professionals with real-world insights"
+        },
+        {
+          title: "Practical Projects",
+          description: "Students automated actual business processes and workflows"
+        }
+      ]
     },
-     {
-      id: 'sosc-hackathon',
+    {
+      id: 'web-dev-workshop',
       type: 'workshop',
-      title: "SOSC HACKATHON 2024",
-      description: "Join us for an exciting 48-hour hackathon where innovation meets collaboration. Build amazing projects with fellow developers.",
-      date: "March 15-17, 2024",
-      category: "hackathon",
-      image_url: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400",
-      is_featured: true
+      title: "Web Development Bootcamp",
+      description: "A comprehensive two-day bootcamp covering modern web development technologies, from HTML/CSS fundamentals to advanced JavaScript frameworks and deployment strategies.",
+      date: "October 17-18, 2025",
+      category: "workshop",
+      image_url: "/Web_dev2.jpg",
+      is_featured: true,
+      gallery: [
+        "/Web_dev0.jpg",
+        "/Web_dev1.jpg",
+        "/Web_dev2.jpg",
+        "/Web_dev3.jpg"
+      ],
+      blogContent: [
+        {
+          type: 'paragraph',
+          content: "Over two intensive days on October 17-18, 2025, AOSC along with C-Maniax conducted a comprehensive Web Development Bootcamp that took participants from web fundamentals to building full-fledged modern web applications. The workshop was structured to provide both theoretical knowledge and extensive hands-on practice."
+        },
+        {
+          type: 'heading',
+          content: 'Day 1: Foundations & Frontend'
+        },
+        {
+          type: 'paragraph',
+          content: "The first day focused on building a solid foundation in web technologies. Participants learned HTML5 semantic markup, CSS3 styling techniques including Flexbox and Grid, and responsive design principles. We then progressed to JavaScript fundamentals, DOM manipulation, and event handling."
+        },
+        {
+          type: 'list',
+          items: [
+            'HTML5 semantic elements and accessibility',
+            'CSS3 advanced layouts with Flexbox and Grid',
+            'Responsive design and mobile-first approach',
+            'JavaScript ES6+ features and best practices',
+            'DOM manipulation and event-driven programming',
+            'Introduction to React and component-based architecture'
+          ]
+        },
+        {
+          type: 'heading',
+          content: 'Day 2: Advanced Concepts & Deployment'
+        },
+        {
+          type: 'paragraph',
+          content: "The second day elevated the learning with modern frameworks and backend integration. Participants built interactive applications using React, learned state management, server connections, and how to handle requests and responses through backend APIs."
+        },
+        {
+          type: 'list',
+          items: [
+            'React hooks and state management',
+            'Server connection and backend integration',
+            'Handling HTTP requests and responses',
+            'RESTful API integration and async operations',
+            'Git version control and collaboration workflows',
+            'Build tools and bundlers (Vite, Webpack)',
+            'Deployment strategies (Vercel, Netlify)',
+            'Performance optimization and best practices'
+          ]
+        }
+      ],
+      stats: [
+        { value: '60+', label: 'Participants' },
+        { value: '2 Days', label: 'Duration' },
+        { value: '4', label: 'Topics Covered' }
+      ],
+      features: [
+        {
+          title: "Full-Stack Coverage",
+          description: "From HTML basics to React deployment in just two days"
+        },
+        {
+          title: "Live Coding Sessions",
+          description: "Build real projects alongside experienced developers"
+        },
+        {
+          title: "Career Guidance",
+          description: "Learn industry best practices and portfolio building tips"
+        },
+        {
+          title: "Continued Support",
+          description: "Access to resources and community support after the workshop"
+        }
+      ]
     }
-    
   ];
 
   // Filter highlights based on search and category
